@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>NPR Finder</title>
+    <meta name="viewport" content="initial-scale=1.0">
+    <meta charset="utf-8">
+    <link rel="stylesheet" href="notuber.css" />
+    <link rel="stylesheet" href="semantic.css" />
+  </head>
+
+  <body>
+  <br>
+  <h1> NPR Locator</h1>
+  <br>
+    <div id="map"></div>
+    <script>
+
+        var my_lat_long = {lat: 41.4993, lng: -81.6944};
+
+        var map;
+
+        var stations = [{latitude: 41.898917, longitude: -87.623111, name: "WBEZ Chicago", station: "91.5 FM"}, {latitude: 41.3717200, longitude: -81.7131900, name: "WCPN Cleveland", station: "90.3 FM"}];
+        
+        function initMap() {
+        
+            var me = {
+                url: "smile.svg",
+                scaledSize: new google.maps.Size(25,25)
+            }
+
+            if (navigator.geolocation){
+                navigator.geolocation.getCurrentPosition(function (position){
+
+                    my_lat_long = {lat: position.coords.latitude, lng: position.coords.longitude}
+
+                    map = new google.maps.Map(document.getElementById('map'), {
+                        center: my_lat_long,
+                        zoom: 11
+                    });
+
+                    var marker = new google.maps.Marker({
+                        position: my_lat_long,
+                        map: map,
+                        icon: me
+                    })
+
+                    var infowindow = new google.maps.InfoWindow({
+                        content: "This is your current location"
+                    });
+
+                    infowindow.open(map, marker);
+
+                    marker.addListener('click', function(){
+                        if (isOpen(infowindow)){
+                            infowindow.close();
+                        }else{ 
+                            infowindow.open(map,station_marker);
+                        }
+                    });
+
+                    add_stations();
+                })
+            }
+        }
+
+        function add_stations(){
+
+            var radio_station = {
+                url: "microphone.svg",
+                scaledSize: new google.maps.Size(25,25)
+            }
+
+            for (var i = 0; i < stations.length; i++){
+                if(get_distance(stations[i].latitude, stations[i].longitude) < 80){
+                    
+                    var station_marker = new google.maps.Marker({
+                        position: {lat: stations[i].latitude, lng: stations[i].longitude},
+                        map: map,
+                        icon: radio_station
+                    })
+
+                    var infowindow = new google.maps.InfoWindow({
+                        content: "This is radio station " + stations[i].name + ", playing on channel " + stations[i].station
+                    });
+
+                    station_marker.addListener('click', function(){
+                        if (isOpen(infowindow)){
+                            infowindow.close();
+                        }else{ 
+                            infowindow.open(map,station_marker);
+                        }
+                    });
+                }
+            }
+        }
+
+        function isOpen(infowindow){
+            var new_map = infowindow.getMap();
+            return (new_map !== null && typeof new_map !== "undefined");
+        }
+
+        function get_distance(lat1, lng1){
+            var R = 3963.2;
+            var x1 = my_lat_long.lat - lat1;
+            var x2 = my_lat_long.lng - lng1;
+            var dlat = toRad(x1);
+            var dlng = toRad(x2);
+            var a = Math.sin(dlat/2) * Math.sin(dlat/2) + Math.cos(toRad(lat1)) *
+                    Math.cos(toRad(my_lat_long.lat)) * Math.sin(dlng/2) * Math.sin(dlng/2);
+            var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)); 
+            var d = R * c;
+
+            return d;
+        }
+
+        function toRad(x){
+            return ((x * Math.PI)/180);
+        }
+    </script>
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCNZPvfPAoyaKwq-dRmuzXguwd8cHYvPkY&callback=initMap"
+    async defer></script>
+  </body>
+</html>
